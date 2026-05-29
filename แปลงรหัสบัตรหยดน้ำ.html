@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>โปรแกรมแปลงรหัสบัตรคีย์การ์ด</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Prompt', sans-serif;
+            background-color: #f3f4f6;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-6">
+        <div class="text-center">
+            <h1 class="text-2xl font-semibold text-gray-800">แปลงรหัสบัตรหยดน้ำ</h1>
+            <p class="text-sm text-gray-500 mt-1">สำหรับเครื่องสแกนรุ่น ST625EM / HiView</p>
+        </div>
+
+        <div class="space-y-4">
+            <div>
+                <label for="cardNumber" class="block text-sm font-medium text-gray-700 mb-1">กรอกตัวเลขบนบัตรหยดน้ำ (10 หลัก)</label>
+                <input type="number" id="cardNumber" inputmode="numeric" placeholder="เช่น 0011471480" 
+                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition outline-none text-lg text-center tracking-widest">
+            </div>
+
+            <button onclick="calculateCode()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition shadow-md active:scale-95">
+                คำนวณรหัส 5 หลัก
+            </button>
+        </div>
+
+        <!-- ส่วนแสดงผลลัพธ์ (ซ่อนไว้ตอนเริ่มต้น) -->
+        <div id="resultSection" class="hidden space-y-4 pt-4 border-t border-gray-200">
+            <div class="text-center bg-gray-50 p-4 rounded-xl border border-gray-100">
+                <p class="text-sm text-gray-500 mb-1">รหัส 5 หลักสำหรับบัตรใบนี้คือ</p>
+                <p id="fiveDigitCode" class="text-4xl font-bold text-blue-600 tracking-widest">00000</p>
+            </div>
+
+            <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                <p class="text-sm font-semibold text-blue-800 mb-2">วิธีกดเพิ่มบัตรที่หน้าเครื่อง:</p>
+                <ol class="text-sm text-blue-900 space-y-2 list-decimal list-inside">
+                    <li>กด <strong>* 123456 #</strong> <span class="text-xs text-blue-700">(เพื่อเข้าโหมดตั้งค่า)</span></li>
+                    <li>กด 
+                        <strong id="instructionCode" class="bg-white px-2 py-1 rounded border border-blue-200 text-lg mx-1">
+                            11 * 00000 * 00000 #
+                        </strong>
+                    </li>
+                    <li>กด <strong>*</strong> <span class="text-xs text-blue-700">(เพื่อออกจากโหมด)</span></li>
+                </ol>
+            </div>
+        </div>
+        
+        <!-- ข้อความแจ้งเตือนกรณีข้อมูลผิดพลาด -->
+        <div id="errorMsg" class="hidden text-center text-red-500 text-sm font-medium">
+            กรุณากรอกตัวเลขให้ถูกต้อง
+        </div>
+    </div>
+
+    <script>
+        function calculateCode() {
+            const inputElement = document.getElementById('cardNumber');
+            const resultSection = document.getElementById('resultSection');
+            const errorMsg = document.getElementById('errorMsg');
+            const fiveDigitCodeDisplay = document.getElementById('fiveDigitCode');
+            const instructionCodeDisplay = document.getElementById('instructionCode');
+
+            const rawInput = inputElement.value.trim();
+
+            // ตรวจสอบว่ามีข้อมูลและเป็นตัวเลข
+            if (!rawInput || isNaN(rawInput)) {
+                errorMsg.classList.remove('hidden');
+                resultSection.classList.add('hidden');
+                return;
+            }
+
+            errorMsg.classList.add('hidden');
+
+            // แปลงเป็นตัวเลข (ตัด 0 ข้างหน้าออกให้อัตโนมัติด้วย parseInt)
+            const numericValue = parseInt(rawInput, 10);
+
+            // คำนวณหาเศษ (Modulo 65536)
+            const remainder = numericValue % 65536;
+
+            // เติม 0 ข้างหน้าให้ครบ 5 หลัก
+            const fiveDigitString = remainder.toString().padStart(5, '0');
+
+            // อัปเดตหน้าจอ
+            fiveDigitCodeDisplay.textContent = fiveDigitString;
+            instructionCodeDisplay.textContent = `11 * ${fiveDigitString} * ${fiveDigitString} #`;
+            
+            // แสดงผลลัพธ์
+            resultSection.classList.remove('hidden');
+        }
+
+        // ทำให้กด Enter เพื่อคำนวณได้
+        document.getElementById('cardNumber').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                calculateCode();
+            }
+        });
+    </script>
+</body>
+</html>
